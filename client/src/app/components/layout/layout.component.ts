@@ -14,8 +14,7 @@ import { AuthService } from "../../core/services/auth.service";
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="text-sm text-gray-500">
-                            Halo,
-                            <span class="font-medium text-gray-700">{{ auth.user()?.name }}</span>
+                            Halo, <span class="font-medium text-gray-700">{{ auth.user()?.name }}</span>
                         </span>
                         <button (click)="auth.logout()" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100">Keluar</button>
                     </div>

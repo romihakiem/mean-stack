@@ -1,7 +1,7 @@
 {
-  "name": "mern-skeleton-server",
+  "name": "mean-skeleton-server",
   "version": "1.0.0",
-  "description": "MERN skeleton - Express + MongoDB REST API with JWT auth",
+  "description": "MEAN skeleton - Express + MongoDB REST API with JWT auth",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {

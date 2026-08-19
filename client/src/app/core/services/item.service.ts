@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
-import { Item, ItemForm } from "../models/models";
+import { Item, ItemForm, PaginatedItems } from "../models/models";
 
 @Injectable({ providedIn: "root" })
 export class ItemService {
@@ -10,11 +10,10 @@ export class ItemService {
 
     constructor(private http: HttpClient) {}
 
-    getItems(search = ""): Observable<{ items: Item[]; total: number }> {
-        const params = search ? { search } : {};
-        return this.http.get<{ items: Item[]; total: number }>(this.baseUrl, {
-            params,
-        });
+    getItems(search = "", page = 1, limit = 10): Observable<PaginatedItems> {
+        const params: Record<string, string | number> = { page, limit };
+        if (search) params["search"] = search;
+        return this.http.get<PaginatedItems>(this.baseUrl, { params });
     }
 
     getItem(id: string): Observable<{ item: Item }> {

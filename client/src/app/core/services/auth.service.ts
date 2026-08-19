@@ -31,13 +31,7 @@ export class AuthService {
     }
 
     register(name: string, email: string, password: string): Observable<AuthResponse> {
-        return this.http
-            .post<AuthResponse>(`${this.baseUrl}/register`, {
-                name,
-                email,
-                password,
-            })
-            .pipe(tap((res) => this.persistSession(res)));
+        return this.http.post<AuthResponse>(`${this.baseUrl}/register`, { name, email, password }).pipe(tap((res) => this.persistSession(res)));
     }
 
     login(email: string, password: string): Observable<AuthResponse> {

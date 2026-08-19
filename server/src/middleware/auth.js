@@ -4,31 +4,23 @@ const User = require("../models/User");
 const protect = async (req, res, next) => {
     try {
         const header = req.headers.authorization || "";
-        const token = header.startsWith("Bearer ")
-            ? header.split(" ")[1]
-            : null;
+        const token = header.startsWith("Bearer ") ? header.split(" ")[1] : null;
 
         if (!token) {
-            return res
-                .status(401)
-                .json({ message: "Tidak ada token, akses ditolak" });
+            return res.status(401).json({ message: "Tidak ada token, akses ditolak" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            return res
-                .status(401)
-                .json({ message: "User untuk token ini tidak ditemukan" });
+            return res.status(401).json({ message: "User untuk token ini tidak ditemukan" });
         }
 
         req.user = user;
         next();
     } catch (err) {
-        return res
-            .status(401)
-            .json({ message: "Token tidak valid atau kedaluwarsa" });
+        return res.status(401).json({ message: "Token tidak valid atau kedaluwarsa" });
     }
 };
 

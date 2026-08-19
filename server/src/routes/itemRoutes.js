@@ -1,11 +1,5 @@
 const express = require("express");
-const {
-    getItems,
-    getItemById,
-    createItem,
-    updateItem,
-    deleteItem,
-} = require("../controllers/itemController");
+const { getItems, getItemById, createItem, updateItem, deleteItem } = require("../controllers/itemController");
 const { protect } = require("../middleware/auth");
 
 const router = express.Router();

@@ -24,3 +24,13 @@ export interface Item {
 }
 
 export type ItemForm = Omit<Item, "_id" | "owner" | "createdAt" | "updatedAt">;
+
+export interface PaginatedItems {
+    items: Item[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+}

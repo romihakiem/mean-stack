@@ -14,9 +14,7 @@ import { Item, ItemForm } from "../../core/models/models";
 
         <div *ngIf="item || isNew" class="h-full rounded-lg border border-gray-200 bg-white">
             <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                <h2 class="font-semibold text-gray-800">
-                    {{ isNew ? "Item Baru" : "Detail Item" }}
-                </h2>
+                <h2 class="font-semibold text-gray-800">{{ isNew ? "Item Baru" : "Detail Item" }}</h2>
                 <button *ngIf="!isNew" (click)="delete.emit(item!._id)" class="text-sm font-medium text-red-500 transition hover:text-red-600">Hapus</button>
             </div>
 
@@ -126,9 +124,6 @@ export class ItemDetailComponent implements OnChanges {
 
     handleSubmit(): void {
         if (this.form.invalid) return;
-        this.save.emit({
-            form: this.form.getRawValue() as ItemForm,
-            id: this.item?._id,
-        });
+        this.save.emit({ form: this.form.getRawValue() as ItemForm, id: this.item?._id });
     }
 }

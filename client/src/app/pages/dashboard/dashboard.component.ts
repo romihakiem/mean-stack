@@ -7,6 +7,8 @@ import { ItemDetailComponent } from "../../components/item-detail/item-detail.co
 import { ItemService } from "../../core/services/item.service";
 import { Item, ItemForm } from "../../core/models/models";
 
+const ITEMS_PER_PAGE = 10;
+
 @Component({
     selector: "app-dashboard",
     standalone: true,
@@ -23,7 +25,19 @@ import { Item, ItemForm } from "../../core/models/models";
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-[360px_1fr]" style="min-height: 60vh">
-                <app-item-list [items]="items" [selectedId]="selected?._id ?? null" [search]="search" (select)="handleSelect($event)" (new)="handleNew()" (searchChange)="handleSearchChange($event)"></app-item-list>
+                <app-item-list
+                    [items]="items"
+                    [selectedId]="selected?._id ?? null"
+                    [search]="search"
+                    [page]="page"
+                    [totalPages]="totalPages"
+                    [hasPrevPage]="hasPrevPage"
+                    [hasNextPage]="hasNextPage"
+                    (select)="handleSelect($event)"
+                    (new)="handleNew()"
+                    (searchChange)="handleSearchChange($event)"
+                    (pageChange)="handlePageChange($event)"
+                ></app-item-list>
 
                 <app-item-detail [item]="selected" [isNew]="isNew" [saving]="saving" (save)="handleSave($event)" (delete)="handleDelete($event)" (cancel)="handleCancel()"></app-item-detail>
             </div>
@@ -41,6 +55,11 @@ export class DashboardComponent implements OnInit {
     saving = false;
     error = "";
 
+    page = 1;
+    totalPages = 1;
+    hasPrevPage = false;
+    hasNextPage = false;
+
     private searchSubject = new Subject<string>();
 
     constructor(private itemService: ItemService) {}
@@ -49,15 +68,20 @@ export class DashboardComponent implements OnInit {
         this.fetchItems();
 
         this.searchSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((q) => {
-            this.fetchItems(q);
+            this.page = 1;
+            this.fetchItems(q, 1);
         });
     }
 
-    fetchItems(query = ""): void {
+    fetchItems(query = this.search, page = this.page): void {
         this.loading = true;
-        this.itemService.getItems(query).subscribe({
+        this.itemService.getItems(query, page, ITEMS_PER_PAGE).subscribe({
             next: (res) => {
                 this.items = res.items;
+                this.page = res.page;
+                this.totalPages = res.totalPages;
+                this.hasPrevPage = res.hasPrevPage;
+                this.hasNextPage = res.hasNextPage;
                 this.loading = false;
             },
             error: (err) => {
@@ -70,6 +94,12 @@ export class DashboardComponent implements OnInit {
     handleSearchChange(value: string): void {
         this.search = value;
         this.searchSubject.next(value);
+    }
+
+    handlePageChange(nextPage: number): void {
+        if (nextPage < 1 || nextPage > this.totalPages) return;
+        this.page = nextPage;
+        this.fetchItems(this.search, nextPage);
     }
 
     handleSelect(item: Item): void {
@@ -95,11 +125,14 @@ export class DashboardComponent implements OnInit {
             next: (res) => {
                 if (id) {
                     this.items = this.items.map((it) => (it._id === id ? res.item : it));
+                    this.selected = res.item;
                 } else {
-                    this.items = [res.item, ...this.items];
+                    this.selected = res.item;
                     this.isNew = false;
+                    // Item baru muncul paling atas (sort createdAt desc), jadi kembali ke halaman 1
+                    this.page = 1;
+                    this.fetchItems(this.search, 1);
                 }
-                this.selected = res.item;
                 this.saving = false;
             },
             error: (err) => {
@@ -113,8 +146,12 @@ export class DashboardComponent implements OnInit {
         if (!confirm("Yakin ingin menghapus item ini?")) return;
         this.itemService.deleteItem(id).subscribe({
             next: () => {
-                this.items = this.items.filter((it) => it._id !== id);
                 this.selected = null;
+                // Jika item terakhir di halaman ini dihapus, mundur satu halaman
+                const isLastItemOnPage = this.items.length === 1 && this.page > 1;
+                const targetPage = isLastItemOnPage ? this.page - 1 : this.page;
+                this.page = targetPage;
+                this.fetchItems(this.search, targetPage);
             },
             error: (err) => {
                 this.error = err.error?.message || "Gagal menghapus item";

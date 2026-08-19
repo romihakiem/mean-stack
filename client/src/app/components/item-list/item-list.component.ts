@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Item } from "../../core/models/models";
+import { PaginationComponent } from "../pagination/pagination.component";
 
 @Component({
     selector: "app-item-list",
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent],
     template: `
         <div class="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
             <div class="border-b border-gray-200 p-4">
@@ -42,6 +43,8 @@ import { Item } from "../../core/models/models";
                     </button>
                 </li>
             </ul>
+
+            <app-pagination [page]="page" [totalPages]="totalPages" [hasPrevPage]="hasPrevPage" [hasNextPage]="hasNextPage" (pageChange)="pageChange.emit($event)"></app-pagination>
         </div>
     `,
 })
@@ -49,8 +52,13 @@ export class ItemListComponent {
     @Input() items: Item[] = [];
     @Input() selectedId: string | null = null;
     @Input() search = "";
+    @Input() page = 1;
+    @Input() totalPages = 1;
+    @Input() hasPrevPage = false;
+    @Input() hasNextPage = false;
 
     @Output() select = new EventEmitter<Item>();
     @Output() new = new EventEmitter<void>();
     @Output() searchChange = new EventEmitter<string>();
+    @Output() pageChange = new EventEmitter<number>();
 }

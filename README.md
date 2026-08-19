@@ -1,6 +1,6 @@
 # MEAN Skeleton — Auth JWT + Master-Detail CRUD (Angular 18)
 
-Skeleton aplikasi MERN stack (MongoDB, Express, Angular, Node.js) dengan:
+Skeleton aplikasi MEAN stack (MongoDB, Express, Angular, Node.js) dengan:
 
 - Autentikasi JWT (register, login, `me`, route guard)
 - CRUD penuh untuk resource `Item`
@@ -75,18 +75,41 @@ Frontend berjalan di `http://localhost:4200`. URL API diatur di `src/environment
 
 ## Endpoint API
 
-| Method | Endpoint           | Keterangan                     | Auth |
-| ------ | ------------------ | ------------------------------ | ---- |
-| POST   | /api/auth/register | Registrasi user baru           | -    |
-| POST   | /api/auth/login    | Login, mengembalikan token JWT | -    |
-| GET    | /api/auth/me       | Data user yang sedang login    | ✅   |
-| GET    | /api/items         | Daftar item (bisa `?search=`)  | ✅   |
-| GET    | /api/items/:id     | Detail satu item               | ✅   |
-| POST   | /api/items         | Buat item baru                 | ✅   |
-| PUT    | /api/items/:id     | Update item                    | ✅   |
-| DELETE | /api/items/:id     | Hapus item                     | ✅   |
+| Method | Endpoint           | Keterangan                                    | Auth |
+| ------ | ------------------ | --------------------------------------------- | ---- |
+| POST   | /api/auth/register | Registrasi user baru                          | -    |
+| POST   | /api/auth/login    | Login, mengembalikan token JWT                | -    |
+| GET    | /api/auth/me       | Data user yang sedang login                   | ✅   |
+| GET    | /api/items         | Daftar item (`?search=`, `?page=`, `?limit=`) | ✅   |
+| GET    | /api/items/:id     | Detail satu item                              | ✅   |
+| POST   | /api/items         | Buat item baru                                | ✅   |
+| PUT    | /api/items/:id     | Update item                                   | ✅   |
+| DELETE | /api/items/:id     | Hapus item                                    | ✅   |
 
 Semua endpoint ber-`✅` butuh header `Authorization: Bearer <token>`.
+
+## Pagination
+
+`GET /api/items` mendukung pagination lewat query param:
+
+- `page` — nomor halaman (default `1`)
+- `limit` — jumlah item per halaman (default `10`, maksimal `100`)
+
+Response-nya menyertakan metadata:
+
+```json
+{
+  "items": [...],
+  "total": 42,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 5,
+  "hasPrevPage": false,
+  "hasNextPage": true
+}
+```
+
+Di frontend Angular, `DashboardComponent` menyimpan state `page`/`totalPages` dan memanggil `ItemService.getItems(search, page, limit)` di setiap fetch. Komponen baru `PaginationComponent` menampilkan tombol "Sebelumnya"/"Berikutnya" di dalam `ItemListComponent`, otomatis disembunyikan bila hanya ada 1 halaman. Pencarian (`search`) otomatis mereset ke halaman 1.
 
 ## Cara mengembangkan lebih lanjut
 
