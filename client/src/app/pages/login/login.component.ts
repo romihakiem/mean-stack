@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../core/services/auth.service";
 
@@ -43,11 +43,7 @@ import { AuthService } from "../../core/services/auth.service";
     `,
 })
 export class LoginComponent {
-    form = this.fb.group({
-        email: ["", [Validators.required, Validators.email]],
-        password: ["", Validators.required],
-    });
-
+    form!: FormGroup;
     error = "";
     loading = false;
 
@@ -55,7 +51,12 @@ export class LoginComponent {
         private fb: FormBuilder,
         private auth: AuthService,
         private router: Router,
-    ) {}
+    ) {
+        this.form = this.fb.group({
+            email: ["", [Validators.required, Validators.email]],
+            password: ["", Validators.required],
+        });
+    }
 
     handleSubmit(): void {
         if (this.form.invalid) return;

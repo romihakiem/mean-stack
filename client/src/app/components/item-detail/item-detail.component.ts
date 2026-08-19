@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Item, ItemForm } from "../../core/models/models";
 
 @Component({
@@ -87,16 +87,18 @@ export class ItemDetailComponent implements OnChanges {
     @Output() delete = new EventEmitter<string>();
     @Output() cancel = new EventEmitter<void>();
 
-    form = this.fb.group({
-        name: ["", Validators.required],
-        description: [""],
-        category: [""],
-        price: [0, [Validators.required, Validators.min(0)]],
-        stock: [0, [Validators.required, Validators.min(0)]],
-        status: ["active" as "active" | "inactive"],
-    });
+    form!: FormGroup;
 
-    constructor(private fb: FormBuilder) {}
+    constructor(private fb: FormBuilder) {
+        this.form = this.fb.group({
+            name: ["", Validators.required],
+            description: [""],
+            category: [""],
+            price: [0, [Validators.required, Validators.min(0)]],
+            stock: [0, [Validators.required, Validators.min(0)]],
+            status: ["active" as "active" | "inactive"],
+        });
+    }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes["item"] || changes["isNew"]) {
