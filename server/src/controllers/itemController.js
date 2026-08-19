@@ -1,4 +1,6 @@
 const Item = require("../models/Item");
+const { getPagination, buildMeta } = require("../utils/pagination");
+const { success, error } = require("../utils/response");
 
 // @route GET /api/items
 const getItems = async (req, res) => {
@@ -6,26 +8,16 @@ const getItems = async (req, res) => {
         const { search } = req.query;
         const filter = search ? { name: { $regex: search, $options: "i" } } : {};
 
-        // Pagination: ?page=1&limit=10 (default page=1, limit=10, maksimal limit=100)
-        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
-        const skip = (page - 1) * limit;
+        const { page, limit, skip } = getPagination(req.query);
 
         const [items, total] = await Promise.all([Item.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit), Item.countDocuments(filter)]);
 
-        const totalPages = Math.max(Math.ceil(total / limit), 1);
-
-        res.json({
+        return success(res, 200, "Daftar item berhasil diambil", {
             items,
-            total,
-            page,
-            limit,
-            totalPages,
-            hasPrevPage: page > 1,
-            hasNextPage: page < totalPages,
+            ...buildMeta(total, page, limit),
         });
     } catch (err) {
-        res.status(500).json({ message: "Gagal mengambil data item", error: err.message });
+        return error(res, 500, "Gagal mengambil data item", err);
     }
 };
 
@@ -33,10 +25,10 @@ const getItems = async (req, res) => {
 const getItemById = async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
-        if (!item) return res.status(404).json({ message: "Item tidak ditemukan" });
-        res.json({ item });
+        if (!item) return error(res, 404, "Item tidak ditemukan");
+        return success(res, 200, "Detail item berhasil diambil", { item });
     } catch (err) {
-        res.status(500).json({ message: "Gagal mengambil detail item", error: err.message });
+        return error(res, 500, "Gagal mengambil detail item", err);
     }
 };
 
@@ -44,7 +36,7 @@ const getItemById = async (req, res) => {
 const createItem = async (req, res) => {
     try {
         const { name, description, category, price, stock, status } = req.body;
-        if (!name) return res.status(400).json({ message: "Nama item wajib diisi" });
+        if (!name) return error(res, 400, "Nama item wajib diisi");
 
         const item = await Item.create({
             name,
@@ -56,9 +48,9 @@ const createItem = async (req, res) => {
             owner: req.user._id,
         });
 
-        res.status(201).json({ item });
+        return success(res, 201, "Item berhasil dibuat", { item });
     } catch (err) {
-        res.status(500).json({ message: "Gagal membuat item", error: err.message });
+        return error(res, 500, "Gagal membuat item", err);
     }
 };
 
@@ -69,10 +61,10 @@ const updateItem = async (req, res) => {
             new: true,
             runValidators: true,
         });
-        if (!item) return res.status(404).json({ message: "Item tidak ditemukan" });
-        res.json({ item });
+        if (!item) return error(res, 404, "Item tidak ditemukan");
+        return success(res, 200, "Item berhasil diperbarui", { item });
     } catch (err) {
-        res.status(500).json({ message: "Gagal memperbarui item", error: err.message });
+        return error(res, 500, "Gagal memperbarui item", err);
     }
 };
 
@@ -80,10 +72,10 @@ const updateItem = async (req, res) => {
 const deleteItem = async (req, res) => {
     try {
         const item = await Item.findByIdAndDelete(req.params.id);
-        if (!item) return res.status(404).json({ message: "Item tidak ditemukan" });
-        res.json({ message: "Item berhasil dihapus" });
+        if (!item) return error(res, 404, "Item tidak ditemukan");
+        return success(res, 200, "Item berhasil dihapus");
     } catch (err) {
-        res.status(500).json({ message: "Gagal menghapus item", error: err.message });
+        return error(res, 500, "Gagal menghapus item", err);
     }
 };
 

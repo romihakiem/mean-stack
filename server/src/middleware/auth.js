@@ -1,5 +1,6 @@
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { verifyToken } = require("../utils/jwt");
+const { error } = require("../utils/response");
 
 const protect = async (req, res, next) => {
     try {
@@ -7,26 +8,26 @@ const protect = async (req, res, next) => {
         const token = header.startsWith("Bearer ") ? header.split(" ")[1] : null;
 
         if (!token) {
-            return res.status(401).json({ message: "Tidak ada token, akses ditolak" });
+            return error(res, 401, "Tidak ada token, akses ditolak");
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = verifyToken(token);
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            return res.status(401).json({ message: "User untuk token ini tidak ditemukan" });
+            return error(res, 401, "User untuk token ini tidak ditemukan");
         }
 
         req.user = user;
         next();
     } catch (err) {
-        return res.status(401).json({ message: "Token tidak valid atau kedaluwarsa" });
+        return error(res, 401, "Token tidak valid atau kedaluwarsa");
     }
 };
 
 const adminOnly = (req, res, next) => {
     if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Akses khusus admin" });
+        return error(res, 403, "Akses khusus admin");
     }
     next();
 };

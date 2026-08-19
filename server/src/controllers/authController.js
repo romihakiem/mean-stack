@@ -1,10 +1,6 @@
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
-const signToken = (id) =>
-    jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-    });
+const { generateToken } = require("../utils/jwt");
+const { success, error } = require("../utils/response");
 
 // @route POST /api/auth/register
 const register = async (req, res) => {
@@ -12,23 +8,23 @@ const register = async (req, res) => {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "Nama, email, dan password wajib diisi" });
+            return error(res, 400, "Nama, email, dan password wajib diisi");
         }
 
         const existing = await User.findOne({ email });
         if (existing) {
-            return res.status(409).json({ message: "Email sudah terdaftar" });
+            return error(res, 409, "Email sudah terdaftar");
         }
 
         const user = await User.create({ name, email, password });
-        const token = signToken(user._id);
+        const token = generateToken(user._id);
 
-        res.status(201).json({
+        return success(res, 201, "Registrasi berhasil", {
             token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
     } catch (err) {
-        res.status(500).json({ message: "Gagal registrasi", error: err.message });
+        return error(res, 500, "Gagal registrasi", err);
     }
 };
 
@@ -37,27 +33,27 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({ message: "Email dan password wajib diisi" });
+            return error(res, 400, "Email dan password wajib diisi");
         }
 
         const user = await User.findOne({ email }).select("+password");
         if (!user || !(await user.comparePassword(password))) {
-            return res.status(401).json({ message: "Email atau password salah" });
+            return error(res, 401, "Email atau password salah");
         }
 
-        const token = signToken(user._id);
-        res.json({
+        const token = generateToken(user._id);
+        return success(res, 200, "Login berhasil", {
             token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
     } catch (err) {
-        res.status(500).json({ message: "Gagal login", error: err.message });
+        return error(res, 500, "Gagal login", err);
     }
 };
 
 // @route GET /api/auth/me
 const me = async (req, res) => {
-    res.json({ user: req.user });
+    return success(res, 200, "Data user berhasil diambil", { user: req.user });
 };
 
 module.exports = { register, login, me };
